@@ -1,0 +1,18 @@
+{
+	"manifest_version": 2,
+	"name": "RandomSelection",
+	"type": "parserhook",
+	"author": "Ross McClure",
+	"version": "3.0.0-rw",
+	"url": "http://www.mediawiki.org/wiki/Extension:RandomSelection",
+	"description": "Displays a random option from the given set.",
+	"Hooks": {
+		"ParserFirstCallInit": "MediaWiki\\Extension\\RandomSelection\\RandomSelection::onParserFirstCallInit"
+	},
+	"AutoloadClasses": {
+		"MediaWiki\\Extension\\RandomSelection\\RandomSelection": "src/RandomSelection.php"
+	},
+	"ExtensionMessagesFiles": {
+		"RandomSelectionMagic": "RandomSelection.i18n.magic.php"
+	}
+}
