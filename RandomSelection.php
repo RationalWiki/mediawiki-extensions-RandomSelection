@@ -1,23 +1,17 @@
 <?php
 /*
- 
+
  RandomSelection v2.1.3 -- 7/21/08
- 
+
  This extension randomly displays one of the given options.
- 
+
  Usage: <choose><option>A</option><option>B</option></choose>
  Optional parameter: <option weight="3"> == 3x weight given
- 
+
  Author: Ross McClure [http://www.mediawiki.org/wiki/User:Algorithm]
 */
 
-//Avoid unstubbing $wgParser on setHook() too early on modern (1.12+) MW versions, as per r35980
-if ( defined( 'MW_SUPPORTS_PARSERFIRSTCALLINIT' ) ) {
-	$wgHooks['ParserFirstCallInit'][] = 'wfRandomSelection';
-} else {
-	$wgExtensionFunctions[] = 'wfRandomSelection';
-}
-
+$wgHooks['ParserFirstCallInit'][] = 'wfRandomSelection';
 $wgHooks['LanguageGetMagic'][] = 'efRandomSelection_Magic';
 
 $wgExtensionCredits['parserhook'][] = array(
@@ -33,13 +27,12 @@ function efRandomSelection_Magic( &$magicWords, $langCode) {
 	return true;
 }
 
-function wfRandomSelection() {
-	global $wgParser;
-	$wgParser->setHook( 'choose', 'renderChosen' );
-	if ( defined( get_class( $wgParser ) . '::SFH_OBJECT_ARGS' ) ) {
-		$wgParser->setFunctionHook( 'choose', 'efRandomSelection_RenderPF_obj', SFH_OBJECT_ARGS );
+function wfRandomSelection( Parser $parser ) {
+	$parser->setHook( 'choose', 'renderChosen' );
+	if ( defined( get_class( $parser ) . '::SFH_OBJECT_ARGS' ) ) {
+		$parser->setFunctionHook( 'choose', 'efRandomSelection_RenderPF_obj', SFH_OBJECT_ARGS );
 	} else {
-		$wgParser->setFunctionHook( 'choose', 'efRandomSelection_RenderPF');
+		$parser->setFunctionHook( 'choose', 'efRandomSelection_RenderPF');
 	}
 	return true;
 }
@@ -49,7 +42,7 @@ function efRandomSelection_RenderPF_obj(&$parser, $frame, $args ) {
 	$r = 0;
 
 	//first one is not an object
-	
+
 	$arg = array_shift( $args );
 	$parts = explode( '=', $arg, 2);
 	if ( count($parts) == 2 ) {
@@ -74,7 +67,7 @@ function efRandomSelection_RenderPF_obj(&$parser, $frame, $args ) {
 			$r += 1;
 		}
 	}
-	
+
 	# Choose an option at random
 	if($r <= 0) return '';
 	$r = mt_rand(1,$r);
@@ -105,7 +98,7 @@ function efRandomSelection_RenderPF( &$parser /*,...*/ ) {
 			$r += 1;
 		}
 	}
-	
+
 	# Choose an option at random
 	if($r <= 0) return '';
 	$r = mt_rand(1,$r);
@@ -124,7 +117,7 @@ function renderChosen( $input, $argv, $parser, $frame ) {
 	if (isset($argv['uncached'])) {
 		$parser->disableCache();
 	}
- 
+
 	# Parse the options and calculate total weight
 	$len = preg_match_all("/<option(?:(?:\\s[^>]*?)?\\sweight=[\"']?([^\\s>]+))?"
 		. "(?:\\s[^>]*)?>([\\s\\S]*?)<\\/option>/", $input, $out);
@@ -134,7 +127,7 @@ function renderChosen( $input, $argv, $parser, $frame ) {
 		else $out[1][$i] = intval($out[1][$i]);
 		$r += $out[1][$i];
 	}
- 
+
 	# Choose an option at random
 	if($r <= 0) return "";
 	$r = mt_rand(1,$r);
@@ -145,16 +138,16 @@ function renderChosen( $input, $argv, $parser, $frame ) {
 			break;
 		}
 	}
- 
+
 	# If running new parser, take the easy way out
 	if( defined( 'Parser::VERSION' ) && version_compare( Parser::VERSION, '1.6.1', '>' ) ) {
 	return $parser->recursiveTagParse($input, $frame);
 	}
- 
- 
+
+
 	# Otherwise, create new parser to handle rendering
 	$localParser = new Parser();
- 
+
 	# Initialize defaults, then copy info from parent parser
 	$localParser->clearState();
 	$localParser->mTagHooks         = $parser->mTagHooks;
@@ -162,10 +155,10 @@ function renderChosen( $input, $argv, $parser, $frame ) {
 	$localParser->mTemplatePath     = $parser->mTemplatePath;
 	$localParser->mFunctionHooks    = $parser->mFunctionHooks;
 	$localParser->mFunctionSynonyms = $parser->mFunctionSynonyms;
- 
+
 	# Render the chosen option
 	$output = $localParser->parse($input, $parser->mTitle,
 					$parser->mOptions, false, false);
 	return $output->getText();
-	
+
 }
